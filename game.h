@@ -15,6 +15,7 @@ int battleResult(PLAYER* player, ENEMY* enemy);
 void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int*damageTaken);
 BATTLE** createBattleArray(int size);
 BATTLE* createNewBattle(int size, int eSize);
+void displayBattle(BATTLE* battle);
 void displayBattleHistory(BATTLE** battles, int eSize);
 void displayPlayerStats(PLAYER* player);
 int enemyTurn(PLAYER* player, ENEMY* enemy);
@@ -27,6 +28,7 @@ int mainMenu();
 void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
 int playerTurn(PLAYER* player, ENEMY* enemy);
 void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken);
+void searchBattleByID(BATTLE** battles, int eSize);
 void sortByRounds(BATTLE** battles, int eSize);
 void sortChronologically(BATTLE** battles, int eSize);
 void sortDamageIn(BATTLE** battles, int eSize);
@@ -112,15 +114,25 @@ BATTLE* createNewBattle(int size, int eSize){
 
 //_________________________________________________________________________________________________
 
-void displayBattleHistory(BATTLE** battles, int eSize){
+void displayBattle(BATTLE* battle){
     CLS;
-    banner("B A T T L E   H I S T O R Y", '=');
+    banner("FOUND BATTLE", '=');
+    printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
+    printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", battle->ID, battle->enemyType, battle->result, battle->damageDealt, battle->damageTaken, battle->roundCount);
+    PAUSE;
+}//end displayBattle()
+
+//_________________________________________________________________________________________________
+
+void displayBattleHistory(BATTLE** battles, int eSize){
     if(eSize <= 0){
         CLS;
         banner("GO FIGHT SOMETHING AND COMEBACK", '*');
         PAUSE;
     }
     else{
+        CLS;
+        banner("B A T T L E   H I S T O R Y", '=');
         printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
         for(int i = 0; i < eSize; i++){
             if (battles[i] != NULL)
@@ -266,7 +278,7 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
                 displayBattleHistory(battles, *eSize);
                 break;
             case 5:
-                //search battle history
+                searchBattleByID(battles, *eSize);
                 break;
             case 6:
                 //delete battle history
@@ -307,6 +319,22 @@ void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int
     banner("BATTLE HAS BEEN SAVED", '=');
     PAUSE;
 }//end recordBattle()
+
+//________________________________________________________________________________________________
+
+void searchBattleByID(BATTLE** battles, int eSize){
+    BATTLE* result = NULL;
+    
+    CLS;
+    banner("SEARCHING FOR BATTLE", '=');
+    int input = getInt("Enter the Battle # you'd like to search for: ");
+    
+    for(int i = 0; i < eSize; i++)
+        if(input == battles[i]->ID)
+            result = battles[i];
+
+    displayBattle(result);
+}//end searchBattleByID()
 
 //________________________________________________________________________________________________
 
