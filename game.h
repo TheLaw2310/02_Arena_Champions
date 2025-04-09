@@ -13,8 +13,9 @@
 // PROTOTYPES
 int battleResult(PLAYER* player, ENEMY* enemy);
 void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int*damageTaken);
-BATTLE** createBattleArray();
-BATTLE* createNewBattle(int size, int* eSize);
+BATTLE** createBattleArray(int size);
+BATTLE* createNewBattle(int size, int eSize);
+void displayBattleHistory(BATTLE** battles, int eSize);
 void displayPlayerStats(PLAYER* player);
 int enemyTurn(PLAYER* player, ENEMY* enemy);
 void freeMemory(BATTLE** battles, int eSize);
@@ -71,8 +72,8 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int* 
 
 //________________________________________________________________________________________________
 
-BATTLE** createBattleArray(){
-    BATTLE** battle = (BATTLE**)calloc(1, sizeof(BATTLE*));
+BATTLE** createBattleArray(int size){
+    BATTLE** battle = (BATTLE**)calloc(size, sizeof(BATTLE*));
     if(battle == NULL){
         CLS;
         banner("Memory allocation failed!", '*');
@@ -84,8 +85,8 @@ BATTLE** createBattleArray(){
 
 //_________________________________________________________________________________________________
 
-BATTLE* createNewBattle(int size, int* eSize){
-    if(*eSize < size){
+BATTLE* createNewBattle(int size, int eSize){
+    if(eSize < size){
         BATTLE* newBattle = (BATTLE*)malloc(sizeof(BATTLE));
         if(newBattle == NULL){
             CLS;
@@ -93,7 +94,6 @@ BATTLE* createNewBattle(int size, int* eSize){
             PAUSE;
             exit(-1);
         }//end if(failed)
-        (*eSize)++;
         return newBattle;
     }//end if(have space)
     else{
@@ -103,6 +103,28 @@ BATTLE* createNewBattle(int size, int* eSize){
         exit(-1);
     }//end if(out of space)
 }//end createNewBattle()
+
+//_________________________________________________________________________________________________
+
+void displayBattleHistory(BATTLE** battles, int eSize){
+    CLS;
+    banner("B A T T L E   H I S T O R Y", '=');
+    if(eSize <= 0){
+        CLS;
+        banner("GO FIGHT SOMETHING AND COMEBACK", '*');
+        PAUSE;
+    }
+    else{
+        printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
+        for(int i = 0; i < eSize; i++){
+            if (battles[i] != NULL)
+                printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", i + 1, battles[i]->enemyType, battles[i]->result, battles[i]->damageDealt, battles[i]->damageTaken, battles[i]->roundCount);
+            else
+                printf("\n%4i %15s", i + 1, "INVALID BATTLE");
+        }//end for(i)
+        PAUSE;
+    }
+}//end displayBattleHistory()
 
 //_________________________________________________________________________________________________
 
@@ -143,8 +165,9 @@ void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eS
     banner("C O M B A T ", '=');
     
     //Starting a new battle
-    BATTLE* currentBattle = createNewBattle(size, eSize);
+    BATTLE* currentBattle = createNewBattle(size, *eSize);
     battles[*eSize] = currentBattle;
+    (*eSize)++;
 
     //Spawning enemy(s)
     initializeEnemyStats(enemy);
@@ -227,7 +250,7 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
                 healPlayer(player);
                 break;
             case 4:
-                //displayBattleHistory();
+                displayBattleHistory(battles, *eSize);
                 break;
             case 5:
                 //search battle history

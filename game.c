@@ -18,7 +18,7 @@ int main(){
     int size = getInt("Enter how many battles you want take part in: ");
     int eSize = 0;
 
-    BATTLE** battles = createBattleArray();
+    BATTLE** battles = createBattleArray(size);
     if(battles !=NULL){
         PLAYER player;
         ENEMY enemy;
