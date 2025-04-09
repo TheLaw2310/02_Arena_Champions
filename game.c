@@ -13,6 +13,25 @@
 int main(){
     srand((unsigned) time(NULL));
     
+    CLS;
+    banner("W E L C O M E", '=');
+    int size = getInt("Enter how many battles you want take part in: ");
+    int eSize = 0;
+
+    BATTLE** battles = createBattleArray();
+    if(battles !=NULL){
+        PLAYER player;
+        ENEMY enemy;
+        initializePlayerStats(&player, &enemy);
+        mainMenuLoop(&player, &enemy, battles, size, &eSize);
+    }
+    else{
+        CLS;
+        banner("FATAL ERROR: Memory allocation failed!", '*');
+        PAUSE;
+        exit(-1);
+    }
+    return 0;   
 }//end main()
 
 //________________________________________________________________________________________________

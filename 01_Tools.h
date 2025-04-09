@@ -36,6 +36,7 @@ void flush();
 char getChar(char prompt[]);
 double getDouble(char prompt[]);
 int getInt(char prompt[]);
+void getString(int size, char prompt[], char result[]);
 void pause();
 int randNum(int lower, int upper);
 
@@ -125,11 +126,11 @@ int getInt(char prompt[])
 
 //________________________________________________________________________________________________
 
-char* getString(int size, char prompt[]){
-	char result[size];
+void getString(int size, char prompt[], char result[]){
+	char input[size];
 	printf("%s", prompt);
-	fgets(result, sizeof(result), stdin);
-	return result;
+	scanf("%[^\n]", input); FLUSH;
+	strcpy(result, input);
 }// end getString()
 
 //________________________________________________________________________________________________
