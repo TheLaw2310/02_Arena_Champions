@@ -64,6 +64,7 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int* 
     *turn = 1;
     while(player->health > 0 && enemy->health > 0){
         CLS;
+        banner("C O M B A T ", '=');
         printf("Turn (%i)\n\n", *turn);
         (*turn)++;
 
@@ -165,10 +166,15 @@ void freeMemory(BATTLE** battles, int eSize){
 //________________________________________________________________________________________________
 
 void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eSize){
+    if(player->health <= 0){
+        CLS;
+        banner("YOU'RE DEAD... HEAL YOUR CHARATER AND COME BACK", '*');
+        PAUSE;
+        return;
+    }
+
     int outcome, turn, damageDealt, damageTaken;
-    CLS;
-    banner("C O M B A T ", '=');
-    
+
     //Starting a new battle
     BATTLE* currentBattle = createNewBattle(size, *eSize);
     battles[*eSize] = currentBattle;
