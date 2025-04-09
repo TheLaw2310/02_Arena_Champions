@@ -14,7 +14,7 @@
 int battleResult(PLAYER* player, ENEMY* enemy);
 void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int*damageTaken);
 BATTLE** createBattleArray();
-BATTLE* createNewBattle(int size, int eSize);
+BATTLE* createNewBattle(int size, int* eSize);
 void displayPlayerStats(PLAYER* player);
 int enemyTurn(PLAYER* player, ENEMY* enemy);
 void freeMemory(BATTLE** battles, int eSize);
@@ -58,13 +58,13 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int* 
     *turn = 1;
     while(player->health > 0 && enemy->health > 0){
         CLS;
-        printf("Turn (%i)\n\n", turn);
-        turn++;
+        printf("Turn (%i)\n\n", *turn);
+        (*turn)++;
 
         *damageDealt = playerTurn(player, enemy);
         *damageTaken = enemyTurn(player, enemy);
         
-        printf("Player dealt %d damage to enemy and received %d damage!", damageDealt, damageTaken);
+        printf("Player dealt %d damage to enemy and received %d damage!", *damageDealt, *damageTaken);
         PAUSE;
     }//end combat loop()
 }//end combatLoop()
@@ -84,8 +84,8 @@ BATTLE** createBattleArray(){
 
 //_________________________________________________________________________________________________
 
-BATTLE* createNewBattle(int size, int eSize){
-    if(eSize <= size){
+BATTLE* createNewBattle(int size, int* eSize){
+    if(*eSize < size){
         BATTLE* newBattle = (BATTLE*)malloc(sizeof(BATTLE));
         if(newBattle == NULL){
             CLS;
@@ -93,6 +93,7 @@ BATTLE* createNewBattle(int size, int eSize){
             PAUSE;
             exit(-1);
         }//end if(failed)
+        (*eSize)++;
         return newBattle;
     }//end if(have space)
     else{
@@ -137,21 +138,20 @@ void freeMemory(BATTLE** battles, int eSize){
 //________________________________________________________________________________________________
 
 void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eSize){
-    int turn, damageDealt, damageTaken;
+    int outcome, turn, damageDealt, damageTaken;
     CLS;
     banner("C O M B A T ", '=');
     
     //Starting a new battle
-    BATTLE* currentBattle = createNewBattle(size, *eSize);
+    BATTLE* currentBattle = createNewBattle(size, eSize);
     battles[*eSize] = currentBattle;
-    (*eSize)++;
 
     //Spawning enemy(s)
     initializeEnemyStats(enemy);
     
     combatLoop(player, enemy, &turn, &damageDealt, &damageTaken);
     
-    int outcome = battleResult(player, enemy); // 1 = lose, 2 = win, 3 = tie
+    outcome = battleResult(player, enemy); // 1 = lose, 2 = win, 3 = tie
     
     recordBattle(player, enemy, currentBattle, outcome, turn, damageDealt, damageTaken);
 }//end gameLoop()
@@ -236,7 +236,7 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
                 //delete battle history
                 break;  
             case 7:
-                freeMemory(battles, eSize);
+                freeMemory(battles, *eSize);
                 CLS;
                 banner("Goodbye!", '=');
                 break;
@@ -261,7 +261,7 @@ int playerTurn(PLAYER* player, ENEMY* enemy){
 //________________________________________________________________________________________________
 
 void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken){
-    battle->enemyType = enemy->type;
+    strcpy(battle->enemyType, enemy->type);
     battle->result = outcome;
     battle->roundCount = turn;
     battle->damageDealt = damageDealt;

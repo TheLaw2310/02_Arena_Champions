@@ -22,7 +22,7 @@ typedef struct ENEMY{
 } ENEMY;
 
 typedef struct BATTLE{
-    char enemyType;
+    char enemyType[101];
     int result; // lose = 1, win = 2, tie = 3
     int damageTaken;
     int damageDealt;
