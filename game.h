@@ -19,6 +19,8 @@ void displayBattle(BATTLE* battle);
 void displayBattleHistory(BATTLE** battles, int eSize);
 void displayPlayerStats(PLAYER* player);
 int enemyTurn(PLAYER* player, ENEMY* enemy);
+BATTLE* findBattle(BATTLE** battles, int eSize, int input);
+int findBattleIndex(BATTLE** battles, int eSize, int input);
 void freeMemory(BATTLE** battles, int eSize);
 void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
 void healPlayer(PLAYER* player);
@@ -28,6 +30,7 @@ int mainMenu();
 void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
 int playerTurn(PLAYER* player, ENEMY* enemy);
 void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken);
+void removeBattle(BATTLE** battles, int* eSize);
 void searchBattleByID(BATTLE** battles, int eSize);
 void sortByRounds(BATTLE** battles, int eSize);
 void sortChronologically(BATTLE** battles, int eSize);
@@ -169,6 +172,28 @@ int enemyTurn(PLAYER* player, ENEMY* enemy){
 
 //________________________________________________________________________________________________
 
+BATTLE* findBattle(BATTLE** battles, int eSize, int input){
+    BATTLE* result = NULL;
+
+    for(int i = 0; i < eSize; i++)
+        if(input == battles[i]->ID)
+            result = battles[i];
+    return result;
+}//end findBattle()
+
+//________________________________________________________________________________________________
+
+int findBattleIndex(BATTLE** battles, int eSize, int input){
+    int i;
+    for(i = 0; i < eSize; i++)
+        if(input == battles[i]->ID)
+            return i;
+    
+    return -1;
+}//end findBattle()
+
+//________________________________________________________________________________________________
+
 void freeMemory(BATTLE** battles, int eSize){
     for(int i = eSize - 1; i >= 0; i--)
         free(battles[i]);
@@ -281,7 +306,7 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
                 searchBattleByID(battles, *eSize);
                 break;
             case 6:
-                //delete battle history
+                removeBattle(battles, eSize);
                 break;  
             case 7:
                 freeMemory(battles, *eSize);
@@ -322,18 +347,34 @@ void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int
 
 //________________________________________________________________________________________________
 
+void removeBattle(BATTLE** battles, int* eSize){
+    CLS;
+    banner("REMOVE BATTLE", '=');
+    int input = getInt("Enter the battle # you would like to delete: ");
+    int battleIndex = findBattleIndex(battles, *eSize, input);
+
+    if(battleIndex >= 0 && battleIndex < *eSize){
+        free(battles[battleIndex]);
+
+        //shift following nodes back by one
+        for(int i = battleIndex; i < *eSize - 1; i++)
+            battles[i] = battles[i + 1];
+        
+        (*eSize)--;
+    }//end if()
+    CLS;
+    banner("BATTLE HAS BEEN REMOVE FROM HISTORY", '=');
+    PAUSE;
+}//end removeBattle()
+
+//________________________________________________________________________________________________
+
 void searchBattleByID(BATTLE** battles, int eSize){
-    BATTLE* result = NULL;
-    
     CLS;
     banner("SEARCHING FOR BATTLE", '=');
     int input = getInt("Enter the Battle # you'd like to search for: ");
-    
-    for(int i = 0; i < eSize; i++)
-        if(input == battles[i]->ID)
-            result = battles[i];
-
-    displayBattle(result);
+    BATTLE* battle = findBattle(battles, eSize, input);
+    displayBattle(battle);
 }//end searchBattleByID()
 
 //________________________________________________________________________________________________
