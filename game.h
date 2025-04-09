@@ -27,6 +27,11 @@ int mainMenu();
 void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
 int playerTurn(PLAYER* player, ENEMY* enemy);
 void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken);
+void sortByRounds(BATTLE** battles, int eSize);
+void sortChronologically(BATTLE** battles, int eSize);
+void sortDamageIn(BATTLE** battles, int eSize);
+void sortDamageOut(BATTLE** battles, int eSize);
+void sortingMenu(BATTLE** battles, int eSize);
 
 //________________________________________________________________________________________________
 
@@ -118,7 +123,7 @@ void displayBattleHistory(BATTLE** battles, int eSize){
         printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
         for(int i = 0; i < eSize; i++){
             if (battles[i] != NULL)
-                printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", i + 1, battles[i]->enemyType, battles[i]->result, battles[i]->damageDealt, battles[i]->damageTaken, battles[i]->roundCount);
+                printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", battles[i]->ID, battles[i]->enemyType, battles[i]->result, battles[i]->damageDealt, battles[i]->damageTaken, battles[i]->roundCount);
             else
                 printf("\n%4i %15s", i + 1, "INVALID BATTLE");
         }//end for(i)
@@ -168,6 +173,7 @@ void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eS
     BATTLE* currentBattle = createNewBattle(size, *eSize);
     battles[*eSize] = currentBattle;
     (*eSize)++;
+    battles[*eSize - 1]->ID = *eSize;   //keep track of chronological order
 
     //Spawning enemy(s)
     initializeEnemyStats(enemy);
@@ -250,6 +256,7 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
                 healPlayer(player);
                 break;
             case 4:
+                sortingMenu(battles, *eSize);
                 displayBattleHistory(battles, *eSize);
                 break;
             case 5:
@@ -294,5 +301,103 @@ void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int
     banner("BATTLE HAS BEEN SAVED", '=');
     PAUSE;
 }//end recordBattle()
+
+//________________________________________________________________________________________________
+
+void sortByRounds(BATTLE** battles, int eSize){
+    BATTLE* temp = NULL;
+    for(int i = 0; i < eSize - 1; i++){
+        for(int j = 0; j < eSize - 1; j++){
+            if(battles[j]->roundCount > battles[j + 1]->roundCount){
+                temp = battles[j];
+                battles[j] = battles[j + 1];
+                battles[j + 1] = temp;
+            }//swap if no in order
+        }
+    }
+}//end sortByRounds()
+
+//________________________________________________________________________________________________
+
+void sortChronologically(BATTLE** battles, int eSize){
+    BATTLE* temp = NULL;
+    for(int i = 0; i < eSize - 1; i++){
+        for(int j = 0; j < eSize - 1; j++){
+            if(battles[j]->ID > battles[j + 1]->ID){
+                temp = battles[j];
+                battles[j] = battles[j + 1];
+                battles[j + 1] = temp;
+            }//swap if no in order
+        }
+    }
+}//end sortChronologically()
+
+//________________________________________________________________________________________________
+
+void sortDamageIn(BATTLE** battles, int eSize){
+    BATTLE* temp = NULL;
+    for(int i = 0; i < eSize - 1; i++){
+        for(int j = 0; j < eSize - 1; j++){
+            if(battles[j]->damageTaken > battles[j + 1]->damageTaken){
+                temp = battles[j];
+                battles[j] = battles[j + 1];
+                battles[j + 1] = temp;
+            }//swap if no in order
+        }
+    }
+}//end sortDamageIn()
+
+//________________________________________________________________________________________________
+
+void sortDamageOut(BATTLE** battles, int eSize){
+    BATTLE* temp = NULL;
+    for(int i = 0; i < eSize - 1; i++){
+        for(int j = 0; j < eSize - 1; j++){
+            if(battles[j]->damageDealt > battles[j + 1]->damageDealt){
+                temp = battles[j];
+                battles[j] = battles[j + 1];
+                battles[j + 1] = temp;
+            }//swap if no in order
+        }
+    }
+}//end sortDamageOut()
+
+//________________________________________________________________________________________________
+
+void sortingMenu(BATTLE** battles, int eSize){
+    CLS;
+    banner("A R E N A   C H A M P I O N S", '=');
+    printf("-) Start Game\n");
+    printf("-) Player Stats\n");
+    printf("-) Heal Player\n");
+    printf("-) View Battle History\n");
+    printf("\t1) by chronological order\n");
+    printf("\t2) by DMG-OUT low-high\n");
+    printf("\t3) by DMG-IN low-high\n");
+    printf("\t4) by # of rounds low-high\n");
+    printf("-) Search Battle History\n");
+    printf("-) Delete Battle History\n");
+    printf("-) Exit\n");
+    int choice = getInt("\nEnter selection from the menu: ");
+    
+    switch(choice){
+        case 1:
+            sortChronologically(battles, eSize);
+            break;
+        case 2:
+            sortDamageOut(battles, eSize);
+            break;
+        case 3:
+            sortDamageIn(battles, eSize);
+            break;
+        case 4:
+            sortByRounds(battles, eSize);
+            break;
+        default:
+            CLS;
+            banner("I N V A L I D   I N P U T", '*');
+            PAUSE;
+    }//end switch
+}//end sortingMenu()
 
 //________________________________________________________________________________________________

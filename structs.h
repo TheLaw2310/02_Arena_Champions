@@ -27,4 +27,5 @@ typedef struct BATTLE{
     int damageTaken;
     int damageDealt;
     int roundCount;
+    int ID;
 } BATTLE;
