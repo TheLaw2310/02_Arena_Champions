@@ -10,17 +10,20 @@ typedef struct PLAYER{
     int maxHealth;
     int health;
     int damage;
-    int defense;
+    int defense;    //add a perry mechanic where %75 of enemy damage is given to enemy
+    int speed; //how many turns the player gets in a row
+    int gold;
+    int level;
     int wins;
     int losses;
 } PLAYER;
 
 typedef struct ENEMY{
     char type[100];
-    int maxHealth;
     int health;
     int damage;
     int defense;
+    int speed;  //how many turns the enemy gets in a row
 } ENEMY;
 
 typedef struct BATTLE{

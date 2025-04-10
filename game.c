@@ -15,7 +15,7 @@ int main(){
     
     CLS;
     banner("W E L C O M E", '=');
-    int size = getInt("Enter how many battles you want take part in: ");
+    int size = getInt("Enter how many battles you want to take part in: ");
     int eSize = 0;
 
     BATTLE** battles = createBattleArray(size);

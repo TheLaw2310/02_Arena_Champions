@@ -68,7 +68,7 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int*
     CLS;
     banner("C O M B A T   B E G I N S", '=');
     printf("!! A wild %s has a appeard !!\n", enemy->type);
-    printf("STATS--> HP: %i | ATK: %i | DEF: %i", enemy->maxHealth, enemy->damage, enemy->defense);
+    printf("STATS--> HP: %i | ATK: %i | DEF: %i", enemy->health, enemy->damage, enemy->defense);
     PAUSE;
     while(player->health > 0 && enemy->health > 0){ //each loop is a round
         (*round)++;
@@ -262,15 +262,79 @@ void healPlayer(PLAYER* player){
 //_________________________________________________________________________________________________
 
 ENEMY initializeEnemyStats(){
-    ENEMY result;
-    //initialize enemy stats
-    strcpy(result.type, "Troll");
-    result.maxHealth = 75;
-    result.health = result.maxHealth;
-    result.damage = 8;
-    result.defense = 6;
+    ENEMY enemies[10];
 
-    return result;
+    strcpy(enemies[0].type, "Zombie");
+    enemies[0].health = 35;
+    enemies[0].damage = 4;
+    enemies[0].defense = 0;
+    enemies[0].speed = 1;
+
+    strcpy(enemies[1].type, "Werewolf");
+    enemies[1].health = 20;
+    enemies[1].damage = 8;
+    enemies[1].defense = 2;
+    enemies[1].speed = 5;
+    //25% chance to land 2x damage
+    
+    strcpy(enemies[2].type, "Sorcerer");
+    enemies[2].health = 25;
+    enemies[2].damage = 9;
+    enemies[2].defense = 3;
+    enemies[2].speed = 3;
+    //Ignores defense
+
+    strcpy(enemies[3].type, "Knight");
+    enemies[3].health = 30;
+    enemies[3].damage = 5;
+    enemies[3].defense = 7;
+    enemies[3].speed = 2;
+    
+    strcpy(enemies[4].type, "Imp");
+    enemies[4].health = 18;
+    enemies[4].damage = 6;
+    enemies[4].defense = 1;
+    enemies[4].speed = 4;
+    //DOT (2 damage per turn for 3 turns starting from and after initial hit)
+    
+    strcpy(enemies[5].type, "Scorpion");
+    enemies[5].health = 22;
+    enemies[5].damage = 7;
+    enemies[5].defense = 3;
+    enemies[5].speed = 3;
+    //30% Poison (1-3 damage/turn for 5 turns)
+    
+    strcpy(enemies[6].type, "Vampire");
+    enemies[6].health = 28;
+    enemies[6].damage = 6;
+    enemies[6].defense = 4;
+    enemies[6].speed = 4;
+    //Heals 2HP everytime it lands a hit > 0 DMG
+    
+    strcpy(enemies[7].type, "Assassin");
+    enemies[7].health = 15;
+    enemies[7].damage = 10;
+    enemies[7].defense = 1;
+    enemies[7].speed = 6;
+    //50% chance to not take any damage
+    
+    strcpy(enemies[8].type, "Giant");
+    enemies[8].health = 35;
+    enemies[8].damage = 7;
+    enemies[8].defense = 5;
+    enemies[8].speed = 2;
+    //50% chance to skip player turn (STUN)
+    
+    strcpy(enemies[9].type, "Dragon");
+    enemies[9].health = 50;
+    enemies[9].damage = 10;
+    enemies[9].defense = 6;
+    enemies[9].speed = 4;
+    //Every 3rd turn, dragon breathes fire (2x damage) and heals 10HP or (12 damage ignoring defense)
+
+    int randomEnemy = randNum(0, 9);
+    ENEMY enemy = enemies[randomEnemy];
+    return enemy;
 }//end initializeEnemyStats()
 
 //_________________________________________________________________________________________________
@@ -279,10 +343,11 @@ void initializePlayerStats(PLAYER* player){
     CLS;
     banner("Choose your character", '=');
     getString(100, "Enter your character name: ", player->name);
-    player->maxHealth = 100;
+    player->maxHealth = 40;
     player->health = player->maxHealth;
-    player->damage = 10;
+    player->damage = 8;
     player->defense = 5;
+    player->speed = 3;
     player->wins = 0;
     player->losses = 0;
 }//end initializeGame()
