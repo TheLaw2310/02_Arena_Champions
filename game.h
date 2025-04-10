@@ -80,7 +80,7 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int*
         *damageTaken = enemyTurn(player, enemy);
         
         //reset player defense
-        player->defense = 2;
+        player->defense = 5;
 
         PAUSE;
     }//end combat loop()
@@ -170,6 +170,11 @@ void displayPlayerStats(PLAYER* player){
 
 int enemyTurn(PLAYER* player, ENEMY* enemy){
     int damageTaken = enemy->damage - player->defense;
+    
+    //Don't allow defense to heal player
+    if(damageTaken < 0)
+        damageTaken = 0;
+
     player->health -= damageTaken;
 
     printf("%s Struck for %i DMG", enemy->type, damageTaken);
@@ -260,7 +265,8 @@ ENEMY initializeEnemyStats(){
     ENEMY result;
     //initialize enemy stats
     strcpy(result.type, "Troll");
-    result.health = 75;
+    result.maxHealth = 75;
+    result.health = result.maxHealth;
     result.damage = 8;
     result.defense = 6;
 
