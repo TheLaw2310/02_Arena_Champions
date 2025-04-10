@@ -11,7 +11,7 @@
 //________________________________________________________________________________________________
 
 // PROTOTYPES
-int battleResult(PLAYER* player, ENEMY* enemy);
+char* battleResult(PLAYER* player, ENEMY* enemy);
 void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int*damageTaken);
 BATTLE** createBattleArray(int size);
 BATTLE* createNewBattle(int size, int eSize);
@@ -22,14 +22,14 @@ int enemyTurn(PLAYER* player, ENEMY* enemy);
 BATTLE* findBattle(BATTLE** battles, int eSize, int input);
 int findBattleIndex(BATTLE** battles, int eSize, int input);
 void freeMemory(BATTLE** battles, int eSize);
-void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
+void gameLoop(PLAYER* player, BATTLE** battles, int size, int* eSize);
 void healPlayer(PLAYER* player);
-void initializeEnemyStats(ENEMY* enemy);
-void initializePlayerStats(PLAYER* player, ENEMY* enemy);
+ENEMY initializeEnemyStats();
+void initializePlayerStats(PLAYER* player);
 int mainMenu();
-void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize);
+void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize);
 int playerTurn(PLAYER* player, ENEMY* enemy);
-void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken);
+void recordBattle(PLAYER* player, ENEMY enemy, BATTLE* battle, char outcome[], int turn, int damageDealt, int damageTaken);
 void removeBattle(BATTLE** battles, int* eSize);
 void searchBattleByID(BATTLE** battles, int eSize);
 void sortByRounds(BATTLE** battles, int eSize);
@@ -40,43 +40,48 @@ void sortingMenu(BATTLE** battles, int eSize);
 
 //________________________________________________________________________________________________
 
-int battleResult(PLAYER* player, ENEMY* enemy){
+char* battleResult(PLAYER* player, ENEMY* enemy){
     if(player->health <= 0 && enemy->health > 0){
         player->losses++;
+        player->health = 0;
         CLS;
-        banner("G A M E   O V E R", '*');
-        PAUSE;
-        return 1;
+        banner("P L A Y E R   L O S T", '*');
+        return "LOST";
     }
     else if(player->health > 0 && enemy->health <= 0){
         player->wins++;
         CLS;
-        banner("P L A Y E R   W I N", '=');
-        PAUSE;
-        return 2;
+        banner("P L A Y E R   W O N", '=');
+        return "WON";
     }
     else{
         CLS;
-        banner("IT'S A TIE... DIDN'T SEE THAT ONE COMING", '*');
-        PAUSE;
-        return 3;
+        banner("I T   W A S   A   T I E", '*');
+        return "TIED";
     }
 }//end battleResult()
 
 //________________________________________________________________________________________________
 
-void combatLoop(PLAYER* player, ENEMY* enemy, int* turn, int* damageDealt, int* damageTaken){
-    *turn = 1;
-    while(player->health > 0 && enemy->health > 0){
+void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int* damageTaken){
+    *round = 0;
+    CLS;
+    banner("C O M B A T   B E G I N S", '=');
+    printf("!! A wild %s has a appeard !!\n", enemy->type);
+    printf("STATS--> HP: %i | ATK: %i | DEF: %i", enemy->maxHealth, enemy->damage, enemy->defense);
+    PAUSE;
+    while(player->health > 0 && enemy->health > 0){ //each loop is a round
+        (*round)++;
         CLS;
-        banner("C O M B A T ", '=');
-        printf("Turn (%i)\n\n", *turn);
-        (*turn)++;
-
+        printf("---- R O U N D %i ----\n\n", *round);
+        printf("%s: HP: %i | ATK: %i | DEF: %i\n", player->name, player->health, player->damage, player->defense);
+        printf("%s: HP: %i | ATK: %i | DEF: %i\n\n", enemy->type, enemy->health, enemy->damage, enemy->defense);
         *damageDealt = playerTurn(player, enemy);
         *damageTaken = enemyTurn(player, enemy);
         
-        printf("Player dealt %d damage to enemy and received %d damage!", *damageDealt, *damageTaken);
+        //reset player defense
+        player->defense = 2;
+
         PAUSE;
     }//end combat loop()
 }//end combatLoop()
@@ -121,7 +126,7 @@ void displayBattle(BATTLE* battle){
     CLS;
     banner("FOUND BATTLE", '=');
     printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
-    printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", battle->ID, battle->enemyType, battle->result, battle->damageDealt, battle->damageTaken, battle->roundCount);
+    printf("\n%-4i %-20s %-15s %-15i %-15i %-15i", battle->ID, battle->enemyType, battle->result, battle->damageDealt, battle->damageTaken, battle->roundCount);
     PAUSE;
 }//end displayBattle()
 
@@ -139,7 +144,7 @@ void displayBattleHistory(BATTLE** battles, int eSize){
         printf("%-4s %-20s %-15s %-15s %-15s %-15s\n", "#", "ENEMY", "RESULT", "DMG-OUT", "DMG-IN", "#ROUNDS");
         for(int i = 0; i < eSize; i++){
             if (battles[i] != NULL)
-                printf("\n%-4i %-20s %-15i %-15i %-15i %-15i", battles[i]->ID, battles[i]->enemyType, battles[i]->result, battles[i]->damageDealt, battles[i]->damageTaken, battles[i]->roundCount);
+                printf("\n%-4i %-20s %-15s %-15i %-15i %-15i", battles[i]->ID, battles[i]->enemyType, battles[i]->result, battles[i]->damageDealt, battles[i]->damageTaken, battles[i]->roundCount);
             else
                 printf("\n%4i %15s", i + 1, "INVALID BATTLE");
         }//end for(i)
@@ -164,9 +169,10 @@ void displayPlayerStats(PLAYER* player){
 //_________________________________________________________________________________________________
 
 int enemyTurn(PLAYER* player, ENEMY* enemy){
-    int damageTaken = 0;
-    damageTaken = enemy->damage - player->defense;
+    int damageTaken = enemy->damage - player->defense;
     player->health -= damageTaken;
+
+    printf("%s Struck for %i DMG", enemy->type, damageTaken);
     return damageTaken;
 }//end enemyTurn()
 
@@ -202,7 +208,7 @@ void freeMemory(BATTLE** battles, int eSize){
 
 //________________________________________________________________________________________________
 
-void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eSize){
+void gameLoop(PLAYER* player, BATTLE** battles, int size,  int* eSize){
     if(player->health <= 0){
         CLS;
         banner("YOU'RE DEAD... HEAL YOUR CHARATER AND COME BACK", '*');
@@ -210,34 +216,39 @@ void gameLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size,  int* eS
         return;
     }
 
-    int outcome, turn, damageDealt, damageTaken;
+    int round, damageDealt, damageTaken;
 
-    //Starting a new battle
+    //Starting a new battle and adding to array of battles
     BATTLE* currentBattle = createNewBattle(size, *eSize);
     battles[*eSize] = currentBattle;
     (*eSize)++;
-    battles[*eSize - 1]->ID = *eSize;   //keep track of chronological order
 
-    //Spawning enemy(s)
-    initializeEnemyStats(enemy);
+    //keep track of chronological order of battles
+    battles[*eSize - 1]->ID = *eSize;
+
+    //Spawning enemy
+    ENEMY enemy = initializeEnemyStats();
     
-    combatLoop(player, enemy, &turn, &damageDealt, &damageTaken);
+    //main combat loop
+    combatLoop(player, &enemy, &round, &damageDealt, &damageTaken);
     
-    outcome = battleResult(player, enemy); // 1 = lose, 2 = win, 3 = tie
+    //display win lose tie message
+    char* outcome = battleResult(player, &enemy); // 1 = lose, 2 = win, 3 = tie
     
-    recordBattle(player, enemy, currentBattle, outcome, turn, damageDealt, damageTaken);
+    //save battle stats 
+    recordBattle(player, enemy, currentBattle, outcome, round, damageDealt, damageTaken);
 }//end gameLoop()
 
 //_________________________________________________________________________________________________
 
 void healPlayer(PLAYER* player){
     CLS;
-    if(player->health >= 100){
+    if(player->health >= player->maxHealth){
         banner("UNABLE TO HEAL PLAYER AT MAX HEALTH", '*');
         PAUSE;
     }//end if(health is already full)
     else{
-        player->health = 100;
+        player->health = player->maxHealth;
         banner("PLAYER IS HEALED TO MAX HEALTH", '=');
         PAUSE;
     }//end if(heal successful)
@@ -245,21 +256,25 @@ void healPlayer(PLAYER* player){
 
 //_________________________________________________________________________________________________
 
-void initializeEnemyStats(ENEMY* enemy){
+ENEMY initializeEnemyStats(){
+    ENEMY result;
     //initialize enemy stats
-    strcpy(enemy->type, "Troll");
-    enemy->health = 75;
-    enemy->damage = 8;
-    enemy->defense = 6;
+    strcpy(result.type, "Troll");
+    result.health = 75;
+    result.damage = 8;
+    result.defense = 6;
+
+    return result;
 }//end initializeEnemyStats()
 
 //_________________________________________________________________________________________________
 
-void initializePlayerStats(PLAYER* player, ENEMY* enemy){
+void initializePlayerStats(PLAYER* player){
     CLS;
     banner("Choose your character", '=');
     getString(100, "Enter your character name: ", player->name);
-    player->health = 100;
+    player->maxHealth = 100;
+    player->health = player->maxHealth;
     player->damage = 10;
     player->defense = 5;
     player->wins = 0;
@@ -284,13 +299,13 @@ int mainMenu(){
 
 //_________________________________________________________________________________________________
 
-void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int* eSize){
+void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize){
     int choice = 0;
     do{
         choice = mainMenu();
         switch(choice){
             case 1:
-                gameLoop(player, enemy, battles, size, eSize);
+                gameLoop(player, battles, size, eSize);
                 break;
             case 2:
                 displayPlayerStats(player);
@@ -325,23 +340,44 @@ void mainMenuLoop(PLAYER* player, ENEMY* enemy, BATTLE** battles, int size, int*
 //________________________________________________________________________________________________
 
 int playerTurn(PLAYER* player, ENEMY* enemy){
+    printf("Choose an action:\n");
+    printf("1) Attack\n");
+    printf("2) Defend (2x DEF)\n");
+    int action = getInt("\n>>>");
+    while(action != 1 && action != 2){
+        printf("\nInvalid input!!\n");
+        action = getInt("\n>>>");
+    }
+    //contains calculated damage after accounting for enemy defense
     int damageDealt = 0;
-    damageDealt = player->damage - enemy->defense;
-    enemy->health -= damageDealt;
-    return damageDealt;
+
+    if(action == 1){
+        damageDealt = player->damage - enemy->defense;
+        enemy->health -= damageDealt;
+        printf("\n%s struck for %i DMG\n", player->name, damageDealt);
+        return damageDealt;
+    }
+    else if(action == 2){
+        player->defense *= 2;
+        printf("%s raised DEF to %i\n", player->name, player->defense);
+        return damageDealt;
+    }
+    else{
+        printf("\nFailed to commit any action.\n");
+        return damageDealt;
+    }
 }//end playerTurn()
 
 //________________________________________________________________________________________________
 
-void recordBattle(PLAYER* player, ENEMY* enemy, BATTLE* battle, int outcome, int turn, int damageDealt, int damageTaken){
-    strcpy(battle->enemyType, enemy->type);
-    battle->result = outcome;
-    battle->roundCount = turn;
+void recordBattle(PLAYER* player, ENEMY enemy, BATTLE* battle, char outcome[], int round, int damageDealt, int damageTaken){
+    strcpy(battle->enemyType, enemy.type);
+    strcpy(battle->result, outcome);
+    battle->roundCount = round;
     battle->damageDealt = damageDealt;
     battle->damageTaken = damageTaken;
     
-    CLS;
-    banner("BATTLE HAS BEEN SAVED", '=');
+    printf("\nBattle data has been saved");
     PAUSE;
 }//end recordBattle()
 

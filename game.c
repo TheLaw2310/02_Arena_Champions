@@ -21,9 +21,8 @@ int main(){
     BATTLE** battles = createBattleArray(size);
     if(battles !=NULL){
         PLAYER player;
-        ENEMY enemy;
-        initializePlayerStats(&player, &enemy);
-        mainMenuLoop(&player, &enemy, battles, size, &eSize);
+        initializePlayerStats(&player);
+        mainMenuLoop(&player, battles, size, &eSize);
     }
     else{
         CLS;

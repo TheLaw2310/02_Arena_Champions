@@ -7,6 +7,7 @@
 
 typedef struct PLAYER{
     char name[101];
+    int maxHealth;
     int health;
     int damage;
     int defense;
@@ -16,6 +17,7 @@ typedef struct PLAYER{
 
 typedef struct ENEMY{
     char type[100];
+    int maxHealth;
     int health;
     int damage;
     int defense;
@@ -23,7 +25,7 @@ typedef struct ENEMY{
 
 typedef struct BATTLE{
     char enemyType[101];
-    int result; // lose = 1, win = 2, tie = 3
+    char result[10]; // lose = 1, win = 2, tie = 3
     int damageTaken;
     int damageDealt;
     int roundCount;
