@@ -31,6 +31,7 @@ void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize);
 void playerTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken);
 void recordBattle(PLAYER* player, ENEMY enemy, BATTLE* battle, char outcome[], int turn, int damageDealt, int damageTaken);
 void removeBattle(BATTLE** battles, int* eSize);
+void roundHeader(PLAYER* player, ENEMY* enemy, int round);
 void searchBattleByID(BATTLE** battles, int eSize);
 void sortByRounds(BATTLE** battles, int eSize);
 void sortChronologically(BATTLE** battles, int eSize);
@@ -65,24 +66,47 @@ char* battleResult(PLAYER* player, ENEMY* enemy){
 
 void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int* damageTaken){
     *round = 0;
+    int enemyTurns = enemy->speed;
     CLS;
     banner("C O M B A T   B E G I N S", '=');
     printf("!! A wild %s has a appeard !!\n", enemy->type);
-    printf("STATS--> HP: %i | ATK: %i | DEF: %i", enemy->health, enemy->damage, enemy->defense);
+    printf("STATS--> HP: %i | ATK: %i | DEF: %i | SPEED: %i", enemy->health, enemy->damage, enemy->defense, enemy->speed);
     PAUSE;
+
+    //each loop is a round
     while(player->health > 0 && enemy->health > 0){ //each loop is a round
         (*round)++;
-        CLS;
-        printf("---- R O U N D %i ----\n\n", *round);
-        printf("%s: HP: %i | ATK: %i | DEF: %i\n", player->name, player->health, player->damage, player->defense);
-        printf("%s: HP: %i | ATK: %i | DEF: %i\n\n", enemy->type, enemy->health, enemy->damage, enemy->defense);
-        playerTurn(player, enemy, damageDealt, damageTaken);
-        enemyTurn(player, enemy, damageDealt, damageTaken);
-        
-        //reset player defense
-        player->defense = player->baseDefense;
+        //each loop is a player turn
+        for(int i = 0; i < player->speed; i++){
+            roundHeader(player, enemy, *round);
+            printf("\n%s turn -%i-", player->name, i+1);
+            
+            playerTurn(player, enemy, damageDealt, damageTaken);
+            
+            if(player->isDefending == 1){
+                enemyTurn(player, enemy, damageDealt, damageTaken);
+                enemyTurns--;
+                player->isDefending = 0;
+                player->defense = player->baseDefense;
+            }
+            //exit loop if enemy is defeated
+            if(enemy->health <= 0)
+                i = player->speed;
+            
+            printf("________________________________________________\n");
+            PAUSE;
+        }
 
-        PAUSE;
+        if(enemy->health > 0){
+            //each loop is an enemy turn
+            for(int i = 0; i < enemyTurns; i++){
+                roundHeader(player, enemy, *round);
+                printf("\n%s turn -%i-\n", enemy->type, i+1);
+                enemyTurn(player, enemy, damageDealt, damageTaken);
+                printf("________________________________________________\n");
+                PAUSE;
+            }
+        }
     }//end combat loop()
 }//end combatLoop()
 
@@ -170,12 +194,12 @@ void displayPlayerStats(PLAYER* player){
 
 void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken){
     //execute the code in if statement 33% of the time that player is defending
-    if(player->defense > player->baseDefense && randNum(0,2) == 0){
+    if(player->isDefending == 1 && randNum(0,2) == 0){
         *damageDealt = ceil(0.75 * enemy->damage);
         enemy->health -= *damageDealt;
 
-        printf("%s Parried %s's attack and lost 0 HP!!\n", player->name, enemy->type);
-        printf("%s took %i damage", enemy->type, *damageDealt);
+        printf("\n%s Parried %s's attack and lost 0 HP!!\n", player->name, enemy->type);
+        printf("%s took %i damage\n", enemy->type, *damageDealt);
     }//if Perry was successfull
     else{
         *damageTaken = enemy->damage - player->defense;
@@ -186,7 +210,7 @@ void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken)
 
         player->health -= *damageTaken;
 
-        printf("%s Struck for %i DMG", enemy->type, *damageTaken);
+        printf("\n%s Struck for %i DMG\n", enemy->type, *damageTaken);
     }
 }//end enemyTurn()
 
@@ -421,23 +445,27 @@ void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize){
 //________________________________________________________________________________________________
 
 void playerTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken){
-    printf("Choose an action:\n");
+    printf("\n\nChoose an action:\n");
     printf("1) Attack\n");
     printf("2) Defend (2x DEF)\n");
     int action = getInt("\n>>>");
+    
+    //check for input error
     while(action != 1 && action != 2){
         printf("\nInvalid input!!\n");
         action = getInt("\n>>>");
     }
-    //contains calculated damage after accounting for enemy defense
 
+    //contains calculated damage after accounting for enemy defense
     if(action == 1){
+        player->isDefending = 0;
         *damageDealt = player->damage - enemy->defense;
         enemy->health -= *damageDealt;
         printf("\n%s Struck for %i DMG\n", player->name, *damageDealt);
     }
     else if(action == 2){
-        player->defense = player->baseDefense * 2;
+        player->isDefending = 1;
+        player->defense = player->baseDefense + (player->baseDefense * 0.5);
         printf("\n%s Raised DEF to %i\n", player->name, player->defense);
     }
     else{
@@ -479,6 +507,16 @@ void removeBattle(BATTLE** battles, int* eSize){
     banner("BATTLE HAS BEEN REMOVE FROM HISTORY", '=');
     PAUSE;
 }//end removeBattle()
+
+//________________________________________________________________________________________________
+
+void roundHeader(PLAYER* player, ENEMY* enemy, int round){
+    CLS;
+    printf("---- R O U N D %i ----\n\n", round);
+    printf("%s: HP: %i | ATK: %i | DEF: %i | SPEED: %i\n", player->name, player->health, player->damage, player->defense, player->speed);
+    printf("%s: HP: %i | ATK: %i | DEF: %i | SPEED: %i\n\n", enemy->type, enemy->health, enemy->damage, enemy->defense, enemy->speed);
+    printf("________________________________________________\n");
+}//end roundHeader()
 
 //________________________________________________________________________________________________
 

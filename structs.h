@@ -12,6 +12,7 @@ typedef struct PLAYER{
     int damage;
     int baseDefense;
     int defense;    //add a perry mechanic where %75 of enemy damage is given to enemy at a 33% chance
+    int isDefending; //1 = true | 0 = false
     int speed; //how many turns the player gets in a row
     int gold;
     int level;
