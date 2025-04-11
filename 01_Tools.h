@@ -11,6 +11,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
+#include <math.h>
 #define FLUSH flush()
 
 #ifdef __WIN32

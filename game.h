@@ -18,7 +18,7 @@ BATTLE* createNewBattle(int size, int eSize);
 void displayBattle(BATTLE* battle);
 void displayBattleHistory(BATTLE** battles, int eSize);
 void displayPlayerStats(PLAYER* player);
-int enemyTurn(PLAYER* player, ENEMY* enemy);
+void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageGiven, int* damageTaken);
 BATTLE* findBattle(BATTLE** battles, int eSize, int input);
 int findBattleIndex(BATTLE** battles, int eSize, int input);
 void freeMemory(BATTLE** battles, int eSize);
@@ -28,7 +28,7 @@ ENEMY initializeEnemyStats();
 void initializePlayerStats(PLAYER* player);
 int mainMenu();
 void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize);
-int playerTurn(PLAYER* player, ENEMY* enemy);
+void playerTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken);
 void recordBattle(PLAYER* player, ENEMY enemy, BATTLE* battle, char outcome[], int turn, int damageDealt, int damageTaken);
 void removeBattle(BATTLE** battles, int* eSize);
 void searchBattleByID(BATTLE** battles, int eSize);
@@ -76,11 +76,11 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int*
         printf("---- R O U N D %i ----\n\n", *round);
         printf("%s: HP: %i | ATK: %i | DEF: %i\n", player->name, player->health, player->damage, player->defense);
         printf("%s: HP: %i | ATK: %i | DEF: %i\n\n", enemy->type, enemy->health, enemy->damage, enemy->defense);
-        *damageDealt = playerTurn(player, enemy);
-        *damageTaken = enemyTurn(player, enemy);
+        playerTurn(player, enemy, damageDealt, damageTaken);
+        enemyTurn(player, enemy, damageDealt, damageTaken);
         
         //reset player defense
-        player->defense = 5;
+        player->defense = player->baseDefense;
 
         PAUSE;
     }//end combat loop()
@@ -160,7 +160,7 @@ void displayPlayerStats(PLAYER* player){
     printf("Name    :\t %s\n", player->name);
     printf("Health  :\t %d\n", player->health);
     printf("Damage  :\t %d\n", player->damage);
-    printf("Defense :\t %d\n", player->defense);
+    printf("Defense :\t %d\n", player->baseDefense);
     printf("Wins    :\t %d\n", player->wins);
     printf("Losses  :\t %d\n", player->losses);
     PAUSE;
@@ -168,17 +168,26 @@ void displayPlayerStats(PLAYER* player){
 
 //_________________________________________________________________________________________________
 
-int enemyTurn(PLAYER* player, ENEMY* enemy){
-    int damageTaken = enemy->damage - player->defense;
-    
-    //Don't allow defense to heal player
-    if(damageTaken < 0)
-        damageTaken = 0;
+void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken){
+    //execute the code in if statement 33% of the time that player is defending
+    if(player->defense > player->baseDefense && randNum(0,2) == 0){
+        *damageDealt = ceil(0.75 * enemy->damage);
+        enemy->health -= *damageDealt;
 
-    player->health -= damageTaken;
+        printf("%s Parried %s's attack and lost 0 HP!!\n", player->name, enemy->type);
+        printf("%s took %i damage", enemy->type, *damageDealt);
+    }//if Perry was successfull
+    else{
+        *damageTaken = enemy->damage - player->defense;
+        
+        //Don't allow defense to heal player
+        if(*damageTaken < 0)
+            *damageTaken = 0;
 
-    printf("%s Struck for %i DMG", enemy->type, damageTaken);
-    return damageTaken;
+        player->health -= *damageTaken;
+
+        printf("%s Struck for %i DMG", enemy->type, *damageTaken);
+    }
 }//end enemyTurn()
 
 //________________________________________________________________________________________________
@@ -346,7 +355,8 @@ void initializePlayerStats(PLAYER* player){
     player->maxHealth = 40;
     player->health = player->maxHealth;
     player->damage = 8;
-    player->defense = 5;
+    player->baseDefense = 5;
+    player->defense = player->baseDefense;
     player->speed = 3;
     player->wins = 0;
     player->losses = 0;
@@ -410,7 +420,7 @@ void mainMenuLoop(PLAYER* player, BATTLE** battles, int size, int* eSize){
 
 //________________________________________________________________________________________________
 
-int playerTurn(PLAYER* player, ENEMY* enemy){
+void playerTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken){
     printf("Choose an action:\n");
     printf("1) Attack\n");
     printf("2) Defend (2x DEF)\n");
@@ -420,22 +430,18 @@ int playerTurn(PLAYER* player, ENEMY* enemy){
         action = getInt("\n>>>");
     }
     //contains calculated damage after accounting for enemy defense
-    int damageDealt = 0;
 
     if(action == 1){
-        damageDealt = player->damage - enemy->defense;
-        enemy->health -= damageDealt;
-        printf("\n%s struck for %i DMG\n", player->name, damageDealt);
-        return damageDealt;
+        *damageDealt = player->damage - enemy->defense;
+        enemy->health -= *damageDealt;
+        printf("\n%s Struck for %i DMG\n", player->name, *damageDealt);
     }
     else if(action == 2){
-        player->defense *= 2;
-        printf("%s raised DEF to %i\n", player->name, player->defense);
-        return damageDealt;
+        player->defense = player->baseDefense * 2;
+        printf("\n%s Raised DEF to %i\n", player->name, player->defense);
     }
     else{
         printf("\nFailed to commit any action.\n");
-        return damageDealt;
     }
 }//end playerTurn()
 
