@@ -78,23 +78,35 @@ void combatLoop(PLAYER* player, ENEMY* enemy, int* round, int* damageDealt, int*
         (*round)++;
         //each loop is a player turn
         for(int i = 0; i < player->speed; i++){
-            roundHeader(player, enemy, *round);
-            printf("\n%s turn -%i-", player->name, i+1);
-            
-            playerTurn(player, enemy, damageDealt, damageTaken);
-            
-            if(player->isDefending == 1){
-                enemyTurn(player, enemy, damageDealt, damageTaken);
-                enemyTurns--;
-                player->isDefending = 0;
-                player->defense = player->baseDefense;
+            //if Giant stunned player
+            if(enemy->ID == 8 && randNum(0,1) == 0){
+                roundHeader(player, enemy, *round);
+                printf("\n%s turn -%i-", player->name, i+1);
+                printf("\n\n%s Stunned %s and skipped this turn\n", enemy->type, player->name);
+                printf("________________________________________________\n");
+                PAUSE;
             }
-            //exit loop if enemy is defeated
-            if(enemy->health <= 0)
-                i = player->speed;
             
-            printf("________________________________________________\n");
-            PAUSE;
+            //normal turn    
+            else{    
+                roundHeader(player, enemy, *round);
+                printf("\n%s turn -%i-", player->name, i+1);
+                
+                playerTurn(player, enemy, damageDealt, damageTaken);
+                
+                if(player->isDefending == 1){
+                    enemyTurn(player, enemy, damageDealt, damageTaken);
+                    enemyTurns--;
+                    player->isDefending = 0;
+                    player->defense = player->baseDefense;
+                }
+                //exit loop if enemy is defeated
+                if(enemy->health <= 0)
+                    i = player->speed;
+                
+                printf("________________________________________________\n");
+                PAUSE;
+            }
         }
 
         if(enemy->health > 0){
@@ -226,9 +238,19 @@ void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken)
 
         player->health -= *damageTaken;
 
+        //prevent overkill (negative HP)
+        if(player->health <= 0)
+            player->health = 0;
+
         printf("\n%s Struck for %i DMG\n", enemy->type, *damageTaken);
+        
+        if(enemy->ID == 6 && *damageTaken > 0){
+            enemy->health += 2;
+            printf("\n%s Recovered 2 HP with the successful hit\n", enemy->type);
+        }//end if(vampire and successful hit)
     }
     enemy->damage = enemy->baseDamage;
+    player->defense = player->baseDefense;
 }//end enemyTurn()
 
 //________________________________________________________________________________________________
@@ -373,7 +395,7 @@ ENEMY initializeEnemyStats(){
     enemies[6].damage = enemies[6].baseDamage;
     enemies[6].defense = 4;
     enemies[6].speed = 4;
-    //Heals 2HP everytime it lands a hit > 0 DMG
+    //Heals 2HP everytime it lands a hit > 0 DMG (DONE)
     
     strcpy(enemies[7].type, "Assassin");
     enemies[7].ID = 7;
@@ -382,7 +404,7 @@ ENEMY initializeEnemyStats(){
     enemies[7].damage = enemies[7].baseDamage;
     enemies[7].defense = 1;
     enemies[7].speed = 6;
-    //50% chance to not take any damage
+    //50% chance to not take any damage (DONE)
     
     strcpy(enemies[8].type, "Giant");
     enemies[8].ID = 8;
@@ -391,7 +413,7 @@ ENEMY initializeEnemyStats(){
     enemies[8].damage = enemies[8].baseDamage;
     enemies[8].defense = 5;
     enemies[8].speed = 2;
-    //50% chance to skip player turn (STUN)
+    //50% chance to skip player turn (STUN) (DONE)
     
     strcpy(enemies[9].type, "Dragon");
     enemies[9].ID = 9;
@@ -495,10 +517,17 @@ void playerTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken
 
     //contains calculated damage after accounting for enemy defense
     if(action == 1){
-        player->isDefending = 0;
-        *damageDealt = player->damage - enemy->defense;
-        enemy->health -= *damageDealt;
-        printf("\n%s Struck for %i DMG\n", player->name, *damageDealt);
+        if(enemy->ID == 7 && randNum(0,1) == 0){
+            player->isDefending = 0;
+            *damageDealt = 0;
+            printf("\n%s Evaded %s's attack and received 0 damage!\n", enemy->type, player->name);
+        }
+        else{
+            player->isDefending = 0;
+            *damageDealt = player->damage - enemy->defense;
+            enemy->health -= *damageDealt;
+            printf("\n%s Struck for %i DMG\n", player->name, *damageDealt);
+        }
     }
     else if(action == 2){
         player->isDefending = 1;
