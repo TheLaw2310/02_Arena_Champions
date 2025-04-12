@@ -185,6 +185,7 @@ void displayPlayerStats(PLAYER* player){
     printf("Health  :\t %d\n", player->health);
     printf("Damage  :\t %d\n", player->damage);
     printf("Defense :\t %d\n", player->baseDefense);
+    printf("Speed   :\t %d\n", player->speed);
     printf("Wins    :\t %d\n", player->wins);
     printf("Losses  :\t %d\n", player->losses);
     PAUSE;
@@ -193,6 +194,19 @@ void displayPlayerStats(PLAYER* player){
 //_________________________________________________________________________________________________
 
 void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken){
+    switch(enemy->ID){
+        case 1:
+            if(randNum(0,3) == 0){
+                enemy->damage *= 2;
+                printf("\n%s has achieved a *Critical Hit* and will deal %i Damage\n", enemy->type, enemy->damage);
+            }
+            break;
+        case 2:
+            break;
+        default:
+            break;
+    }//end switch()
+    
     //execute the code in if statement 33% of the time that player is defending
     if(player->isDefending == 1 && randNum(0,2) == 0){
         *damageDealt = ceil(0.75 * enemy->damage);
@@ -212,6 +226,7 @@ void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken)
 
         printf("\n%s Struck for %i DMG\n", enemy->type, *damageTaken);
     }
+    enemy->damage = enemy->baseDamage;
 }//end enemyTurn()
 
 //________________________________________________________________________________________________
@@ -298,69 +313,89 @@ ENEMY initializeEnemyStats(){
     ENEMY enemies[10];
 
     strcpy(enemies[0].type, "Zombie");
+    enemies[0].ID = 0;
     enemies[0].health = 35;
-    enemies[0].damage = 4;
+    enemies[0].baseDamage = 4;
+    enemies[0].damage = enemies[0].baseDamage;
     enemies[0].defense = 0;
     enemies[0].speed = 1;
 
     strcpy(enemies[1].type, "Werewolf");
+    enemies[1].ID = 1;
     enemies[1].health = 20;
-    enemies[1].damage = 8;
+    enemies[1].baseDamage = 8;
+    enemies[1].damage = enemies[1].baseDamage;
     enemies[1].defense = 2;
     enemies[1].speed = 5;
     //25% chance to land 2x damage
     
     strcpy(enemies[2].type, "Sorcerer");
+    enemies[2].ID = 2;
     enemies[2].health = 25;
-    enemies[2].damage = 9;
+    enemies[2].baseDamage = 9;
+    enemies[2].damage = enemies[2].baseDamage;
     enemies[2].defense = 3;
     enemies[2].speed = 3;
     //Ignores defense
 
     strcpy(enemies[3].type, "Knight");
+    enemies[3].ID = 3;
     enemies[3].health = 30;
-    enemies[3].damage = 5;
+    enemies[3].baseDamage = 5;
+    enemies[3].damage = enemies[3].baseDamage;
     enemies[3].defense = 7;
     enemies[3].speed = 2;
     
     strcpy(enemies[4].type, "Imp");
+    enemies[4].ID = 4;
     enemies[4].health = 18;
-    enemies[4].damage = 6;
+    enemies[4].baseDamage = 6;
+    enemies[4].damage = enemies[4].baseDamage;
     enemies[4].defense = 1;
     enemies[4].speed = 4;
     //DOT (2 damage per turn for 3 turns starting from and after initial hit)
     
     strcpy(enemies[5].type, "Scorpion");
+    enemies[5].ID = 5;
     enemies[5].health = 22;
-    enemies[5].damage = 7;
+    enemies[5].baseDamage = 7;
+    enemies[5].damage = enemies[5].baseDamage;
     enemies[5].defense = 3;
     enemies[5].speed = 3;
     //30% Poison (1-3 damage/turn for 5 turns)
     
     strcpy(enemies[6].type, "Vampire");
+    enemies[6].ID = 6;
     enemies[6].health = 28;
-    enemies[6].damage = 6;
+    enemies[6].baseDamage = 6;
+    enemies[6].damage = enemies[6].baseDamage;
     enemies[6].defense = 4;
     enemies[6].speed = 4;
     //Heals 2HP everytime it lands a hit > 0 DMG
     
     strcpy(enemies[7].type, "Assassin");
+    enemies[7].ID = 7;
     enemies[7].health = 15;
-    enemies[7].damage = 10;
+    enemies[7].baseDamage = 10;
+    enemies[7].damage = enemies[7].baseDamage;
     enemies[7].defense = 1;
     enemies[7].speed = 6;
     //50% chance to not take any damage
     
     strcpy(enemies[8].type, "Giant");
+    enemies[8].ID = 8;
     enemies[8].health = 35;
-    enemies[8].damage = 7;
+    enemies[8].baseDamage = 7;
+    enemies[8].damage = enemies[8].baseDamage;
     enemies[8].defense = 5;
     enemies[8].speed = 2;
     //50% chance to skip player turn (STUN)
     
     strcpy(enemies[9].type, "Dragon");
+    enemies[9].ID = 9;
     enemies[9].health = 50;
-    enemies[9].damage = 10;
+    enemies[9].baseDamage = 10;
+    enemies[9].damage = enemies[9].baseDamage;
     enemies[9].defense = 6;
     enemies[9].speed = 4;
     //Every 3rd turn, dragon breathes fire (2x damage) and heals 10HP or (12 damage ignoring defense)

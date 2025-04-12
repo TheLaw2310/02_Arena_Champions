@@ -22,7 +22,9 @@ typedef struct PLAYER{
 
 typedef struct ENEMY{
     char type[100];
+    int ID;
     int health;
+    int baseDamage;
     int damage;
     int defense;
     int speed;  //how many turns the enemy gets in a row
