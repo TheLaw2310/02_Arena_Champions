@@ -202,6 +202,8 @@ void enemyTurn(PLAYER* player, ENEMY* enemy, int* damageDealt, int* damageTaken)
             }
             break;
         case 2:
+            player->defense = 0;
+            printf("\n%s has bypassed the player Defense!!\n", enemy->type);
             break;
         default:
             break;
@@ -327,7 +329,7 @@ ENEMY initializeEnemyStats(){
     enemies[1].damage = enemies[1].baseDamage;
     enemies[1].defense = 2;
     enemies[1].speed = 5;
-    //25% chance to land 2x damage
+    //25% chance to land 2x damage (DONE)
     
     strcpy(enemies[2].type, "Sorcerer");
     enemies[2].ID = 2;
@@ -336,7 +338,7 @@ ENEMY initializeEnemyStats(){
     enemies[2].damage = enemies[2].baseDamage;
     enemies[2].defense = 3;
     enemies[2].speed = 3;
-    //Ignores defense
+    //Ignores defense (DONE)
 
     strcpy(enemies[3].type, "Knight");
     enemies[3].ID = 3;
